@@ -16,8 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __FWI_H__INCLUDED
-#define __FWI_H__INCLUDED
+#pragma once
 
 #include "WTime.h"
 
@@ -31,19 +30,8 @@ double calc_previous_hourly_ffmc_vanwagner(const double current_ffmc,
 					   double ws);
 double calc_daily_ffmc_vanwagner(const double in_ffmc, const double rain, double temperature, const double rh, double ws);
 
-#define ALLOW_EQUILIBRIUM
-#ifdef ALLOW_EQUILIBRIUM
-double calc_hourly_ffmc_equilibrium(const WTimeSpan &ts, const double in_ffmc, const double rain, double temperature, double rh, double ws);
-double calc_previous_hourly_ffmc_equilibrium(const double current_ffmc, 
-					   const double rain, 
-					   const double temperature, 
-					   const double rh, 
-					   const double ws);
-#endif
-
 double calc_hourly_ffmc_lawson(double ff_ffmc, WTimeSpan ts, double rh);
 double calc_hourly_ffmc_lawson_contiguous(double ff_ffmc_prev, double ff_ffmc_curr, const WTimeSpan &ts, double rh_0, double rh_t, double rh_1, bool contiguous);
-double calc_hourly_ffmc_hybrid(double ff_ffmc_prev, double ff_ffmc_curr, double in_ffmc, const WTimeSpan &ts, const double *rain48, double temperature, double rh, double ws);
 
 double calc_dmc (const double in_dmc, const double rain, double temperature, const double latitude, const double longitude, const std::uint16_t mm, const double rh);// duff moisture code
 double calc_dc  (const double in_dc, double rain, double temperature, const double latitude, const double longitude, const std::uint16_t mm);		// drought code
@@ -57,5 +45,3 @@ double calc_bui (const double dc, const double dmc);						// build-up index
 
 double calc_fwi	(const double isi, const double bui);
 double calc_dsr	(const double fwi ) ;
-
-#endif

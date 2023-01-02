@@ -45,39 +45,12 @@ HRESULT CCWFGM_FWI::HourlyFFMC_VanWagner(double in_ffmc, double rain, double tem
 
 		WTimeSpan duration(seconds_since_ffmc);
 		if ((*ffmc = calc_subdaily_ffmc_vanwagner(duration, in_ffmc, rain, temperature, rh, ws)) < 0.0) {
-			weak_assert(0);
+			weak_assert(false);
 			return E_INVALIDARG;
 		}
 	}
 	catch (...) {
-		weak_assert(0);
-		*ffmc = -97.0;
-		return E_INVALIDARG;
-	}
-	return S_OK;
-}
-
-
-HRESULT CCWFGM_FWI::HourlyFFMC_Equilibrium(double in_ffmc, double rain, double temperature, double rh,
-	double ws, std::uint32_t seconds_since_ffmc, double *ffmc) {
-	if (!ffmc)
-		return E_POINTER;
-	try {
-#ifdef _DEBUG
-		weak_assert(seconds_since_ffmc <= (60 * 60));
-		weak_assert(seconds_since_ffmc > 0);
-#endif
-		if (seconds_since_ffmc > (2 * 60 * 60))
-			return E_INVALIDARG;
-
-		WTimeSpan duration(seconds_since_ffmc);
-		if ((*ffmc = calc_hourly_ffmc_equilibrium(duration, in_ffmc, rain, temperature, rh, ws)) < 0.0) {
-			weak_assert(0);
-			return E_INVALIDARG;
-		}
-	}
-	catch (...) {
-		weak_assert(0);
+		weak_assert(false);
 		*ffmc = -97.0;
 		return E_INVALIDARG;
 	}
@@ -93,12 +66,12 @@ HRESULT CCWFGM_FWI::HourlyFFMC_Lawson(double in_prev_std_ffmc, double in_curr_st
 		WTimeSpan ts((std::int64_t)(std::int32_t)seconds_into_day);
 		if ((*ffmc = calc_hourly_ffmc_lawson_contiguous(in_prev_std_ffmc, in_curr_std_ffmc, ts, rh * 100.0, rh * 100.0, rh * 100.0, false)) < 0.0)
 		{
-			weak_assert(0);
+			weak_assert(false);
 			return E_INVALIDARG;
 		}
 	}
 	catch (...) {
-		weak_assert(0);
+		weak_assert(false);
 		*ffmc = -97.0;
 		return E_INVALIDARG;
 	}
@@ -112,31 +85,12 @@ HRESULT CCWFGM_FWI::HourlyFFMC_VanWagner_Previous(double in_ffmc, double rain, d
 		return E_POINTER;
 	try {
 		if ((*ffmc = calc_previous_hourly_ffmc_vanwagner(in_ffmc, rain, temperature, rh, ws)) < 0.0) {
-			weak_assert(0);
+			weak_assert(false);
 			return E_INVALIDARG;
 		}
 	}
 	catch (...) {
-		weak_assert(0);
-		*ffmc = -97.0;
-		return E_INVALIDARG;
-	}
-	return S_OK;
-}
-
-
-HRESULT CCWFGM_FWI::HourlyFFMC_Equilibrium_Previous(double in_ffmc, double rain, double temperature, double rh,
-	double ws, double *ffmc) {
-	if (!ffmc)
-		return E_POINTER;
-	try {
-		if ((*ffmc = calc_previous_hourly_ffmc_equilibrium(in_ffmc, rain, temperature, rh, ws)) < 0.0) {
-			weak_assert(0);
-			return E_INVALIDARG;
-		}
-	}
-	catch (...) {
-		weak_assert(0);
+		weak_assert(false);
 		*ffmc = -97.0;
 		return E_INVALIDARG;
 	}
@@ -151,32 +105,12 @@ HRESULT CCWFGM_FWI::HourlyFFMC_Lawson_Contiguous(double in_ffmc_prevday, double 
 	try {
 		WTimeSpan ts((std::int64_t)(std::int32_t)seconds_into_day);
 		if ((*ffmc = calc_hourly_ffmc_lawson_contiguous(in_ffmc_prevday, in_ffmc_currday, ts, rh_0 * 100.0, rh_t * 100.0, rh_1 * 100.0, true)) < 0.0) {
-			weak_assert(0);
+			weak_assert(false);
 			return E_INVALIDARG;
 		}
 	}
 	catch (...) {
-		weak_assert(0);
-		*ffmc = -97.0;
-		return E_INVALIDARG;
-	}
-	return S_OK;
-}
-
-
-HRESULT CCWFGM_FWI::HourlyFFMC_Hybrid(double in_prev_std_ffmc, double in_curr_std_ffmc, double in_ffmc, std::array<double, 48> &rain48,
-	double temperature, double rh, double ws, unsigned long seconds_into_day, double *ffmc) {
-	if (!ffmc)
-		return E_POINTER;
-	try {
-		WTimeSpan ts((std::int64_t)(std::int32_t)seconds_into_day);
-		if ((*ffmc = calc_hourly_ffmc_hybrid(in_prev_std_ffmc, in_curr_std_ffmc, in_ffmc, ts, rain48.data(), temperature, rh * 100.0, ws)) < 0.0) {
-			weak_assert(0);
-			return E_INVALIDARG;
-		}
-	}
-	catch (...) {
-		weak_assert(0);
+		weak_assert(false);
 		*ffmc = -97.0;
 		return E_INVALIDARG;
 	}
@@ -190,12 +124,12 @@ HRESULT CCWFGM_FWI::DailyFFMC_VanWagner(double in_ffmc, double rain, double temp
 		return E_POINTER;
 	try {
 		if ((*ffmc = calc_daily_ffmc_vanwagner(in_ffmc, rain, temperature, rh, ws)) < 0.0) {
-			weak_assert(0);
+			weak_assert(false);
 			return E_INVALIDARG;
 		}
 	}
 	catch (...) {
-		weak_assert(0);
+		weak_assert(false);
 		*ffmc = -97.0;
 		return E_INVALIDARG;
 	}
@@ -213,12 +147,12 @@ HRESULT CCWFGM_FWI::DMC(double in_dmc, double rain, double temperature,  double 
 		return E_INVALIDARG;
 	try {
 		if ((*dmc = calc_dmc(in_dmc, rain, temperature, latitude, longitude, month, rh)) < 0.0) {
-			weak_assert(0);
+			weak_assert(false);
 			return E_INVALIDARG;
 		}
 	}
 	catch (...) {
-		weak_assert(0);
+		weak_assert(false);
 		*dmc = -97.0;
 		return E_INVALIDARG;
 	}
@@ -235,12 +169,12 @@ HRESULT CCWFGM_FWI::DC(double in_dc, double rain, double temperature,  double la
 		return E_INVALIDARG;
 	try {
 		if ((*dc = calc_dc(in_dc, rain, temperature, latitude, longitude, month)) < 0.0) {
-			weak_assert(0);
+			weak_assert(false);
 			return E_INVALIDARG;
 		}
 	}
 	catch (...) {
-		weak_assert(0);
+		weak_assert(false);
 		*dc = -97.0;
 		return E_INVALIDARG;
 	}
@@ -256,7 +190,7 @@ HRESULT CCWFGM_FWI::FF(double ffmc, std::uint32_t seconds_since_ffmc, double *ff
 	}
 	catch (...) {
 #ifdef _DEBUG
-		weak_assert(0);
+		weak_assert(false);
 #endif
 		*ff = -97.0;
 		return E_INVALIDARG;
@@ -274,7 +208,7 @@ HRESULT CCWFGM_FWI::ISI_FWI(double ffmc, double ws, std::uint32_t seconds_since_
 		*isi = calc_isi(duration, ffmc, ws, &m_ff);
 	}
 	catch (...) {
-		weak_assert(0);
+		weak_assert(false);
 		*isi = -97.0;
 		return E_INVALIDARG;
 	}
@@ -291,7 +225,7 @@ HRESULT CCWFGM_FWI::ISI_FBP(double ffmc, double ws, std::uint32_t seconds_since_
 		*isi = calc_isi_fbp(duration, ffmc, ws, &m_ff_fbp);
 	}
 	catch (...) {
-		weak_assert(0);
+		weak_assert(false);
 		*isi = -97.0;
 		return E_INVALIDARG;
 	}
@@ -306,7 +240,7 @@ HRESULT CCWFGM_FWI::BUI(double dc, double dmc, double *bui) const {
 		*bui = calc_bui(dc, dmc);
 	}
 	catch (...) {
-		weak_assert(0);
+		weak_assert(false);
 		*bui = -97.0;
 		return E_INVALIDARG;
 	}
@@ -321,7 +255,7 @@ HRESULT CCWFGM_FWI::FWI(double isi, double bui, double *fwi) const {
 		*fwi = calc_fwi(isi, bui);
 	}
 	catch (...) {
-		weak_assert(0);
+		weak_assert(false);
 		*fwi = -97.0;
 		return E_INVALIDARG;
 	}
@@ -336,7 +270,7 @@ HRESULT CCWFGM_FWI::DSR(double fwi, double *dsr) {
 		*dsr = calc_dsr(fwi);
 	}
 	catch (...) {
-		weak_assert(0);
+		weak_assert(false);
 		*dsr = -97.0;
 		return E_INVALIDARG;
 	}
