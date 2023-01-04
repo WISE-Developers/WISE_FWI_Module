@@ -260,128 +260,6 @@ double calc_daily_ffmc_vanwagner(const double in_ffmc, const double rain, double
 	return c_f;
 }
 
-
-#ifdef ALLOW_EQUILIBRIUM
-
-/* This code was provided by Kerry Anderson on 080501 after the Edmonton meeting
-		in paper form.  Comments on the code are as follows:
-	This routine calculates an FFMC in equilibrium with the environment.
-	It is likely more closer to reality than CVW's original hourly
-	calculations.
-	*/
-double calc_hourly_ffmc_equilibrium(const WTimeSpan &ts, const double in_ffmc, const double rain, double temperature, double rh, double ws) {
-	double mo, m, Ed, Ew;
-	if ((in_ffmc < 0.0) || (in_ffmc > 101.0) ||
-	    (rain < 0.0) || (rain > 300.0))
-		return -98;
-
-	if (temperature < -50.0)
-		temperature = -50.0;
-	else if (temperature > 60.0)
-		temperature = 60.0;
-
-	if (rh < 0.0)
-		rh = 0.0;
-	else if (rh > 1.0)
-		rh = 1.0;
-
-	if (ws > 200.0)
-		ws = 200.0;
-	else if (ws < 0.0)
-		ws = 0.0;
-
-	double factor, hour_frac = (double)ts.GetTotalSeconds() / 60.0 / 60.0;
-	double hour_frac2 = hour_frac - floor(hour_frac);
-	if (hour_frac2 > 1e-4)	factor = 147.27723;
-	else			factor = 147.2;
-
-	const double rhp = rh * 100.0;				// input is 0..1, to match old equations we'll go to 0..100
-
-	mo = factor * (101.0 - in_ffmc) / (59.5 + in_ffmc);						/* equation 2a */
-	if (rain > 0.0) {
-		mo += rain * 42.5 * exp(-100.0 / (251.0 - mo)) * (1.0 - exp(-6.93 / rain));		/* equation 12 */
-		if (mo > 150.0)
-			mo += pow(0.0015 * (mo - 150.0), 2.0) * sqrt(rain);				/* equation 13 */
-		if (mo > 250.0)
-			mo = 250.0;
-	}
-
-	Ed = 0.942 * pow(rhp, 0.679) + 11.0 * exp((rhp - 100.0) / 10.0) + 0.18
-	    * (21.1 - temperature) * (1.0 - exp(-0.115 * rhp));						/* equation 8a */
-	Ew = 0.618 * pow(rhp, 0.753) + 10.0 * exp((rhp - 100.0) / 10.0) + 0.18
-	    * (12.1 - temperature) * (1.0 - exp(-0.115 * rhp));						/* equation 8b */
-
-		m = mo;		// instantaneous recovery
-		if (mo > Ed)	m = Ed;
-		if (mo < Ew)	m = Ew;
-	double c_f = 59.5 * (250.0 - m) / (factor + m);		// was similar to below, but the below code had these
-	if (c_f > 101.0)																	// range checking if statements, so I've duplicated them
-		c_f = 101.0;																		// here too.
-	else if (c_f < 0.0)
-		c_f = 0.0;
-	return c_f;
-}
-
-/////////////////////////////////////////////////////////////////////
-//                                                                 //
-//  This routine calculates ffmc backwards through time based on   //
-//  a one hour step.  It expects the current ffmc and the weather  //
-//  from the previous hour.                                        //
-//                                                                 //
-/////////////////////////////////////////////////////////////////////  
-double calc_previous_hourly_ffmc_equilibrium(const double current_ffmc, 
-				    const double rain, 
-				    const double temperature, 
-				    const double rh, 
-				    const double ws)
-{
-	/* this is the hourly ffmc routine given wx and previous ffmc */
-	if ((current_ffmc < 0.0) || (current_ffmc > 101.0) ||
-	    (rain < 0.0) || (rain > 300.0))
-		return -98;
-
-	double out_ffmc, out_ffmc_prior, in_ffmc, diff_mc;
-
-	in_ffmc = current_ffmc;
-
-	out_ffmc = calc_hourly_ffmc_equilibrium(WTimeSpan(0, 1, 0, 0),
-		         in_ffmc, rain, temperature, rh, ws);
-
-	diff_mc = fabs(out_ffmc - current_ffmc);
-	while (diff_mc > TOLERANCE ) {
-		if (out_ffmc > current_ffmc) {
-			in_ffmc -= diff_mc/2;
-		}
-		else {
-			in_ffmc += diff_mc/2;
-		}
-
-
-		out_ffmc_prior = out_ffmc;	
-		out_ffmc = calc_hourly_ffmc_equilibrium(WTimeSpan(0, 1, 0, 0),
-		         in_ffmc, rain, temperature, rh, ws);
-		// check for error conditions
-		if (out_ffmc < 0.0 || out_ffmc > 101.0) {
-			diff_mc = 0.0;
-			in_ffmc = current_ffmc;
-			break;
-		}
-		// if the output using the previous weather is insensitive to
-		// changes in the input ffmc, then the routine has found the
-		// correct answer
-		if (fabs(out_ffmc-out_ffmc_prior) < TOLERANCE) {
-			diff_mc = 0.0;
-			in_ffmc = out_ffmc;
-			break;
-		}
-
-		diff_mc = fabs(out_ffmc - current_ffmc);
-	}
-	return in_ffmc;
-}
-
-#endif /* ALLOW_EQUILIBRIUM */
-
 /*  Lawson's Interpolation method for FFMC */
 
 /* the Lawson stuff is the code which takes the Equilibrium (from Kerry)
@@ -615,14 +493,17 @@ double calc_hourly_ffmc_lawson(double ff_ffmc, WTimeSpan ts, double rh) {
 		ff_ffmc = 17.5;
 	/*----- end of FFMC scale ----*/
 	
-	if (rh < 0.0)			rh = 0.0;
-	else if (rh > 100.0)	rh = 100.0;
+	if (rh < 0.0)
+		rh = 0.0;
+	else if (rh > 100.0)
+		rh = 100.0;
 
 	rh *= 100.0;
 	rh = floor(rh + 0.5);
 	rh *= 0.01;
 
-	if (rh < 1.0) rh = 95; 
+	if (rh < 1.0)
+		rh = 95; 
 
 	/*------ Select the appropriate RH Class for table lookup  -------------------*/
 	if ((hour >= 6)  && (hour <= 11)) {
@@ -674,7 +555,7 @@ double calc_hourly_ffmc_lawson_contiguous(double ff_ffmc_prev, double ff_ffmc_cu
 	if ((ff_ffmc_prev < 0.0) || (ff_ffmc_prev > 101.0) || 
 	    (ff_ffmc_curr < 0.0) || (ff_ffmc_curr > 101.0) ||
 	    (ts < WTimeSpan(0, -12, 0, 0)) || (ts >= WTimeSpan(1, 11, 0, 0))) {
-		weak_assert(0);
+		weak_assert(false);
 		return -98;
 	}
 
@@ -700,69 +581,6 @@ double calc_hourly_ffmc_lawson_contiguous(double ff_ffmc_prev, double ff_ffmc_cu
 	std::int64_t sec = ts.GetTotalSeconds() % (60 * 60);
 	return ((ffmc2 * (double)sec) + (ffmc1 * (60.0 * 60.0 - (double)sec))) / (60.0 * 60.0);
 }
-
-
-double calc_hourly_ffmc_hybrid(double ff_ffmc_prev, double ff_ffmc_curr, double in_ffmc, const WTimeSpan &ts, const double *rain48,
-    double temperature, double rh, double ws) {
-	if ((ff_ffmc_prev < 0.0) || (ff_ffmc_prev > 101.0) || 
-	    (ff_ffmc_curr < 0.0) || (ff_ffmc_curr > 101.0) ||
-	    (ts < WTimeSpan(0, -12, 0, 0)) || (ts >= WTimeSpan(1, 11, 0, 0))) {
-		weak_assert(0);
-		return -98;
-	}
-	if (temperature < -50.0)
-		temperature = -50.0;
-	else if (temperature > 60.0)
-		temperature = 60.0;
-
-	if (rh < 0.0)			rh = 0.0;
-	else if (rh > 100.0)		rh = 100.0;
-
-	if (ws > 200.0)			ws = 200.0;
-	else if (ws < 0.0)		ws = 0.0;
-
-	double rain = *rain48, rain24 = 0.0;
-	short i;
-
-	// if we got rain in the last hour, then we use vanwagner (immediately)
-	if (rain >= 0.5)
-		return calc_subdaily_ffmc_vanwagner(WTimeSpan(0, 1, 0, 0), in_ffmc, rain, temperature, rh * 0.01, ws);
-
-	for (i = 0; i < 24; i++)						// add up the rain from the past 24 hours
-		if (rain48[i] < 0)								// no more valid readings going back in time so we can abort accumulating now
-			break;
-		else	rain24 += rain48[i];
-
-	if (rain24 >= 0.5)
-		return calc_subdaily_ffmc_vanwagner(WTimeSpan(0, 1, 0, 0), in_ffmc, rain, temperature, rh * 0.01, ws);
-												// if we got enough rain in the last 24 hours, then we also use vanwagner
-												// now it gets more tricky
-												// if we haven't had any rain in the past 24 hours, then we can conditionally
-												// use Lawson - after noon (calculation of the std. daily FFMC value)
-	if (ts >= WTimeSpan(0, 12, 0, 0))
-		return calc_hourly_ffmc_lawson(ff_ffmc_curr, ts, rh);				// 2nd half of the day and no rain in the past 24 hours so calculate lawson
-												// okay, it's the morning so we could use either lawson or van wagner - depending
-												// on what what the rain did - as far back as the prior noon-to-noon period - if
-												// no rain, then we know that the previous day ended in lawson, otherwise the
-												// previous day ended in van wagner - and we have to be consistent
-	if (i == 24) {										// we had all data for the prior 24 hours, so we can try to go back even further
-		short hour = 36 + ts.GetHours();						// we have to go back in time further to see if we're already using van wagner
-		for (; i < hour; i++) {								// for the 1st part of the day (and for the prior afternoon)
-			if (rain48[i] < 0)							// told to abort - no more valid readings, so no change for rain amts to increase
-				break;
-			else {
-				rain24 += rain48[i];
-				rain24 -= rain48[i-24];						// rain24 is for that 24 hour period - only
-			}
-			if (rain24 >= 0.5)							// if we have enough rain, we can stop now - we know we have to use van wagner
-				break;								// from 'here' in time forward
-		}
-	}
-	if (rain24 >= 0.5)
-		return calc_subdaily_ffmc_vanwagner(WTimeSpan(0, 1, 0, 0), in_ffmc, rain, temperature, rh * 0.01, ws);
-												// we've got enough rain to use van wagner
-	return calc_hourly_ffmc_lawson(ff_ffmc_prev, ts, rh);					// there wasn't enough rain at all in history so we know that the 1st half of this
-}												// day (like the last half of the previous day) uses lawson
 
 
 double calc_dmc(const double in_dmc, const double rain, double temperature, const double latitude, const double /*longitude*/, const std::uint16_t mm, double rh) {
