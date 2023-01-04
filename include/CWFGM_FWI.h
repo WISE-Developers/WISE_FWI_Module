@@ -85,22 +85,6 @@ public:
 	 */
 	virtual NO_THROW HRESULT HourlyFFMC_VanWagner(double in_ffmc, double rain, double temperature, double rh, double ws, std::uint32_t seconds_since_ffmc, double *ffmc);
 	/**
-	 * Calculates hourly FFMC (fine fuel moisture code), using the experimental Equilibrium mathematical model developed by K. Anderson,
-	 * based on the previous hour's FFMC and provided conditions.   FFMC is a numerical rating of the moisture content of litter and other cured fine fuels.
-	 * \param in_ffmc The previous time's Van Wagner FFMC value
-	 * \param rain Precipitation in the prior hour, mm
-	 * \param temperature Celsius
-	 * \param rh Relative humidity expressed as a fraction ([0..1])
-	 * \param ws Wind speed (kph)
-	 * \param seconds_since_ffmc Seconds since observed FFMC
-	 * \param ffmc Calculated FFMC value
-   * 
-	 * \retval E_POINTER The FFMC address provided is invalid
-	 * \retval S_OK Successful
-	 * \retval E_INVALIDARG Failure during calculation, or the parameter seconds_since_ffmc is greater than 7200 seconds
-	 */
-	virtual NO_THROW HRESULT HourlyFFMC_Equilibrium(double in_ffmc, double rain, double temperature, double rh, double ws, std::uint32_t seconds_since_ffmc, double *ffmc);
-	/**
 	 * Calculates hourly FFMC (fine fuel moisture code), using Lawson's mathematical model, based on the previous and current daily FFMC values (using Van Wagner) and provided conditions.   FFMC is a numerical rating of the moisture content of litter and other cured fine fuels.
 	 * \param prev_std_ffmc The previous day's standard daily Van Wagner FFMC value
 	 * \param curr_std_ffmc The current day's standard daily Van Wagner FFMC value
@@ -131,20 +115,6 @@ public:
    */
 	virtual NO_THROW HRESULT HourlyFFMC_VanWagner_Previous(double current_ffmc, double rain, double temperature, double rh, double ws, double *prev_ffmc);
 	/**
-	 * Calculates the previous hourly FFMC (fine fuel moisture code), using  equilibrium mathematical model, based on the current hour's FFMC and previous hour's provided conditions.   FFMC is a numerical rating of the moisture content of litter and other cured fine fuels.
-	 * \param in_ffmc The previous time's equilibrium FFMC value
-	 * \param rain Precipitation in the prior hour, mm
-	 * \param temperature Celsius
-	 * \param rh Relative humidity expressed as a fraction ([0..1])
-	 * \param ws Wind speed (kph)
-	 * \param ffmc Calculated FFMC value
-   *
-	 * \retval E_POINTER The FFMC address provided is invalid
-	 * \retval S_OK Successful
-	 * \retval E_INVALIDARG Failure during calculation.
-   */
-	virtual NO_THROW HRESULT HourlyFFMC_Equilibrium_Previous(double current_ffmc, double rain, double temperature, double rh, double ws, double *prev_ffmc);
-	/**
 	 * Calculates a contiguous hourly FFMC (fine fuel moisture code), using Lawson's mathematical model, based on the daily Van Wagner FFMC values for the previous and current days, as well as  current provided conditions.   FFMC is a numerical rating of the moisture content of litter and other cured fine fuels.  This technique uses linear interpolation between 11am and noon LST.  It also applies similar smoothing in morning hours.
 	 * \param in_ffmc_prevday The previous day's standard daily Van Wagner FFMC value
 	 * \param in_ffmc_currday The current day's standard daily Van Wagner FFMC value
@@ -162,24 +132,6 @@ public:
 	 * \retval E_INVALIDARG Failure during calculation or if seconds_into_day is greater than 86400.
    */
 	virtual NO_THROW HRESULT HourlyFFMC_Lawson_Contiguous(double in_ffmc_prevday, double in_ffmc_currday, double rain, double temperature, double rh_0, double rh, double rh_1, double ws, unsigned long seconds_into_day, double *ffmc);
-	/**
-	 * The Van Wagner calculation provides low variability in hourly FFMC values per day but considers rainfall.  The Lawson approach to FFMC values provide more variability to FFMC values through the day, but do not consider rainfall.  This experimental approach returns FFMC values from one technique or another based on reported rainfall amounts over the prior 48 hours.  Contact Brad Armitage for algorithmic details and summaries of results of this approach.
-	 * This implementation is experimental and should be used with caution.
-	 * \param in_prev_std_ffmc The previous day's standard daily Van Wagner FFMC value
-	 * \param in_curr_std_ffmc The current day's standard daily Van Wagner FFMC value
-	 * \param in_ffmc The previous time's Van Wagner FFMC value
-	 * \param rain48 Precipitation, mm in the past 48 hours
-	 * \param temperature Celsius
-	 * \param rh Relative humidity expressed as a fraction ([0..1])
-	 * \param ws Wind speed (kph)
-	 * \param seconds_into_day Local standard time
-	 * \param ffmc Calculated FFMC value
-   *
-	 * \retval E_POINTER The FFMC address provided is invalid
-	 * \retval S_OK Successful
-	 * \retval E_INVALIDARG Failure during calculation
-   */
-	virtual NO_THROW HRESULT HourlyFFMC_Hybrid(double in_prev_std_ffmc, double in_curr_std_ffmc, double in_ffmc, std::array<double, 48> &rain48, double temperature, double rh, double ws, unsigned long seconds_into_day, double *ffmc);
 	/**
 	 * Calculates daily FFMC (fine fuel moisture code), based on the previous day's FFMC and provided conditions.   FFMC is a numerical rating of the moisture content of litter and other cured fine fuels.
 	 * \param in_ffmc The previous day's Van Wagner FFMC value
